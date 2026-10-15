@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>당신의 연금, 이제 누가 운전하나요? — 자율주행 포트폴리오</title>
+<meta name="description" content="AI 에이전트가 연기금을 운용하면 사람의 역할은 운전에서 감독으로 바뀝니다. 자율주행차 비유로 5분 만에 이해하기.">
+<meta property="og:title" content="당신의 연금, 이제 누가 운전하나요?">
+<meta property="og:description" content="연기금 '자율주행 포트폴리오'를 5분 만에 이해하기">
+<meta name="theme-color" content="#050914">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%23050914%27/%3E%3Cpath d=%27M6 28L14 4M26 28L18 4%27 stroke=%27%2338bdf8%27 stroke-width=%272%27/%3E%3Cpath d=%27M16 28V4%27 stroke=%27%23f59e0b%27 stroke-width=%272%27 stroke-dasharray=%274 3%27/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+  :root {
+    --bg: #050914;
+    --surface-lowest: #080e1d;
+    --surface-low: #151b2b;
+    --surface: #191f2f;
+    --surface-high: #242a3a;
+    --on-surface: #dde2f8;
+    --on-surface-variant: #bdc8d1;
+    --outline: #3e484f;
+    --sky: #38bdf8;
+    --sky-soft: #8ed5ff;
+    --sky-pale: #c4e7ff;
+    --amber: #ffb95f;
+    --amber-deep: #f59e0b;
+    --red: #ef4444;
+    --gutter: 1.25rem;
+    --maxw: 80rem;
+    --radius: 0.5rem;
+  }
+  @media (min-width: 768px) { :root { --gutter: 2.5rem; } }
+  @media (min-width: 1280px) { :root { --gutter: 5rem; } }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--on-surface);
+    font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+    font-size: 1rem;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    word-break: keep-all;          /* 한국어: 어절 단위로 줄바꿈 */
+    overflow-wrap: break-word;
+  }
+  h1, h2, h3, p { margin: 0; }
+  h1, h2, .display, .closing-lines { text-wrap: balance; }
+  p { text-wrap: pretty; }
+  a { color: inherit; }
+  svg { display: block; }
+
+  /* 배경 차선 */
+  .lanes {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    display: flex; justify-content: space-between;
+    max-width: var(--maxw); margin: 0 auto; padding: 0 var(--gutter); opacity: .2;
+  }
+  .lanes span { width: 1px; height: 100%; background: linear-gradient(to bottom, transparent, rgba(56,189,248,.3), transparent); }
+  .lanes span:nth-child(2), .lanes span:nth-child(3) { display: none; opacity: .5; }
+  @media (min-width: 768px) { .lanes span:nth-child(2), .lanes span:nth-child(3) { display: block; } }
+
+  main { overflow-x: clip; }   /* 연출 시작 위치(x 이동)가 가로 스크롤을 만들지 않게 */
+  .wrap { position: relative; z-index: 1; max-width: var(--maxw); margin: 0 auto; padding: 0 var(--gutter); }
+
+  /* 헤더 */
+  header {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(8,14,29,.8);
+    -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(62,72,79,.3);
+  }
+  .progress { height: 2px; background: rgba(36,42,58,.4); }
+  .progress i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--sky), var(--amber), var(--sky)); }
+  header .wrap { display: flex; align-items: center; height: 3.5rem; }
+  .wordmark { font-weight: 600; font-size: 1.125rem; letter-spacing: -.01em; text-decoration: none; }
+
+  /* 공통 섹션 */
+  section { position: relative; z-index: 1; border-top: 1px solid rgba(62,72,79,.2); }
+  .sec { padding: 4.5rem 0; }
+  @media (min-width: 1024px) { .sec { padding: 6rem 0; } }
+  .eyebrow {
+    display: inline-block; padding: .25rem .625rem; border-radius: .25rem;
+    background: var(--surface); border: 1px solid rgba(62,72,79,.4);
+    color: var(--sky-soft); font-size: .875rem; font-weight: 500; line-height: 1.5;
+  }
+  .h2 { font-size: clamp(1.875rem, 1.4rem + 2vw, 2.75rem); line-height: 1.3; font-weight: 700; letter-spacing: -.02em; margin: 1rem 0; }
+  .lead { font-size: 1.125rem; line-height: 1.85; color: var(--on-surface-variant); }
+  .body { color: var(--on-surface-variant); line-height: 1.85; }
+  .panel {
+    border: 1px solid rgba(62,72,79,.4); border-radius: var(--radius);
+    background: rgba(8,14,29,.8); padding: 1.5rem;
+  }
+  @media (min-width: 768px) { .panel { padding: 2rem; } }
+  .grid-pattern {
+    background-size: 40px 40px;
+    background-image:
+      linear-gradient(to right, rgba(56,189,248,.04) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(56,189,248,.04) 1px, transparent 1px);
+  }
+  .split { display: grid; gap: 2.5rem; align-items: center; }
+  @media (min-width: 1024px) {
+    .split { grid-template-columns: 5fr 7fr; }
+    .split.reverse { grid-template-columns: 7fr 5fr; }
+    .split.reverse > :first-child { order: 2; }
+  }
+  .center { max-width: 42rem; margin: 0 auto; }
+  @media (min-width: 768px) { .center { text-align: center; } }
+  .icon { width: 1.25rem; height: 1.25rem; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* 1. Hero */
+  .hero { border-top: 0; min-height: calc(100svh - 3.5rem); display: flex; flex-direction: column; justify-content: center; padding: 3rem 0 2.5rem; overflow: hidden; }
+  .hero .glow { position: absolute; top: 25%; left: 50%; transform: translateX(-50%); width: min(700px, 120vw); height: 350px; background: radial-gradient(ellipse, rgba(255,185,95,.12), rgba(56,189,248,.05) 50%, transparent 70%); filter: blur(40px); pointer-events: none; }
+  .display { font-size: clamp(2.25rem, 1.2rem + 4.6vw, 4.25rem); line-height: 1.18; font-weight: 800; letter-spacing: -.03em; }
+  .grad { background: linear-gradient(90deg, var(--on-surface), var(--sky-soft) 45%, var(--amber)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hero .wrap { width: 100%; }
+  .hero .lead { max-width: 40rem; margin: 1.5rem 0 2rem; }
+  .road {
+    position: relative; height: 13rem; border: 1px solid rgba(56,189,248,.2); border-radius: var(--radius);
+    background-color: rgba(8,14,29,.6); overflow: hidden;
+  }
+  @media (min-width: 768px) { .road { height: 16rem; } }
+  .road svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .dash-flow { stroke-dasharray: 8 8; animation: dashMove 1.5s linear infinite; }
+  @keyframes dashMove { to { stroke-dashoffset: -16; } }
+  @media (prefers-reduced-motion: reduce) { .dash-flow { animation: none; } }
+  .cue { display: flex; flex-direction: column; align-items: center; gap: .5rem; margin-top: 2rem; font-size: .875rem; color: rgba(189,200,209,.8); }
+  .cue b { width: 1px; height: 2rem; background: linear-gradient(var(--amber), var(--sky), transparent); }
+
+  /* 2. 수동 운전 */
+  .driver { display: flex; flex-direction: column; align-items: center; gap: .75rem; padding: 1.5rem; margin-bottom: 1.5rem; border-radius: .375rem; background: var(--surface-low); border: 1px solid rgba(62,72,79,.2); color: var(--on-surface-variant); font-size: .875rem; }
+  .driver .avatar { width: 4rem; height: 4rem; border-radius: 50%; display: grid; place-items: center; background: var(--surface-high); border: 1px solid rgba(62,72,79,.5); }
+  .driver .avatar .icon { width: 2rem; height: 2rem; }
+  .info-cards { display: grid; gap: .75rem; }
+  @media (min-width: 640px) { .info-cards { grid-template-columns: repeat(3, 1fr); } }
+  .info-card { display: flex; align-items: center; gap: .75rem; padding: 1rem; border-radius: .25rem; background: rgba(36,42,58,.6); border: 1px solid rgba(62,72,79,.3); font-weight: 500; }
+  .info-card .icon { color: var(--sky-soft); }
+
+  /* 3. 자율주행 팀 */
+  .team { display: grid; gap: 1.5rem; margin-top: 3rem; align-items: stretch; }
+  @media (min-width: 640px) { .team { grid-template-columns: 1fr 1fr; } .team .radar { grid-column: 1 / -1; grid-row: 1; } }
+  @media (min-width: 1024px) { .team { grid-template-columns: 3fr 6fr 3fr; align-items: center; } .team .radar { grid-column: 2; grid-row: 1; } .team .stat:first-child { grid-column: 1; grid-row: 1; } .team .stat.amber { grid-column: 3; grid-row: 1; } }
+  .stat { padding: 1.5rem; border-radius: var(--radius); background: rgba(11,17,32,.8); border: 1px solid rgba(56,189,248,.3); }
+  .stat.amber { border-color: rgba(255,185,95,.3); }
+  .stat .num { font-size: clamp(2.75rem, 2rem + 3vw, 3.75rem); line-height: 1.1; font-weight: 800; letter-spacing: -.03em; color: var(--sky-soft); white-space: nowrap; margin-bottom: .75rem; }
+  .stat.amber .num { color: var(--amber); }
+  .stat h3 { font-size: 1.25rem; font-weight: 600; margin-bottom: .5rem; }
+  .stat p { font-size: 1rem; color: var(--on-surface-variant); line-height: 1.7; }
+  .radar { position: relative; min-height: 15rem; border-radius: var(--radius); border: 1px solid rgba(62,72,79,.3); background-color: var(--surface-lowest); display: grid; place-items: center; overflow: hidden; }
+  .radar .ring { position: absolute; border-radius: 50%; border: 1px solid rgba(56,189,248,.25); }
+  .radar .r1 { width: 14rem; height: 14rem; border-color: rgba(56,189,248,.18); }
+  .radar .r2 { width: 11rem; height: 11rem; }
+  .radar .r3 { width: 6rem; height: 6rem; border-color: rgba(255,185,95,.4); }
+  .car { position: relative; width: 3.5rem; height: 6rem; border-radius: .5rem; border: 2px solid var(--sky); background: #0d1322; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: .5rem; box-shadow: 0 0 16px rgba(56,189,248,.25); }
+  .car i { display: block; width: 100%; height: 4px; border-radius: 2px; background: var(--amber); }
+  .car i:last-child { background: var(--sky); }
+  .car .icon { color: var(--sky-soft); width: 1.5rem; height: 1.5rem; }
+
+  /* 4. 투표 */
+  .votes { display: grid; grid-template-columns: repeat(3, 1fr); gap: .75rem; padding-top: .75rem; }
+  @media (min-width: 768px) { .votes { gap: 1rem; } }
+  .vote { position: relative; display: grid; place-items: center; min-height: 7rem; border-radius: .375rem; border: 1px solid rgba(62,72,79,.3); background: rgba(25,31,47,.4); font-size: 1.25rem; font-weight: 500; }
+  @media (min-width: 768px) { .vote { min-height: 8.75rem; } }
+  .vote.pick { border: 2px solid var(--amber); background: rgba(36,42,58,.9); font-weight: 700; box-shadow: 0 0 20px rgba(245,158,11,.2); }
+  .vote .badge { position: absolute; top: -.8rem; display: inline-flex; align-items: center; gap: .25rem; padding: .125rem .5rem; border-radius: .25rem; background: var(--amber); color: var(--surface-lowest); font-size: .8125rem; font-weight: 700; }
+  .vote .badge .icon { width: .875rem; height: .875rem; stroke-width: 3; }
+
+  /* 5. 스스로 고치기 */
+  .paths { position: relative; height: 12rem; }
+  @media (min-width: 768px) { .paths { height: 14rem; } }
+  .paths svg { width: 100%; height: 100%; }
+  .legend { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; margin-top: 1rem; font-size: .875rem; color: var(--on-surface-variant); }
+  .legend span { display: inline-flex; align-items: center; gap: .5rem; }
+  .legend i { display: inline-block; width: 1.5rem; height: 0; border-top: 3px solid var(--amber); }
+  .legend i.dash { border-top: 2.5px dashed var(--sky); }
+
+  /* 6. 감독석 */
+  .quote { font-size: clamp(2rem, 1.2rem + 3.6vw, 3.75rem); line-height: 1.25; font-weight: 800; letter-spacing: -.03em; margin: 1rem 0 1.25rem; }
+  .rules { display: grid; gap: 1rem; margin-top: 3rem; }
+  @media (min-width: 768px) { .rules { grid-template-columns: repeat(3, 1fr); gap: 1.5rem; } }
+  .rule { padding: 1.5rem; border-radius: var(--radius); background: var(--surface-low); border: 1px solid rgba(56,189,248,.3); }
+  .rule .sign { width: 2.5rem; height: 2.5rem; border-radius: .25rem; display: grid; place-items: center; margin-bottom: 1rem; color: var(--sky-soft); background: rgba(56,189,248,.1); border: 1px solid rgba(56,189,248,.4); }
+  .rule h3 { font-size: 1.25rem; font-weight: 700; margin-bottom: .25rem; }
+  .rule p { color: var(--on-surface-variant); }
+  .brake { margin-top: 1.5rem; display: flex; flex-direction: column; align-items: center; gap: 1.5rem; text-align: center; border-color: rgba(239,68,68,.4); }
+  @media (min-width: 768px) { .brake { flex-direction: row; justify-content: space-between; text-align: left; } }
+  .brake h3 { font-size: clamp(1.375rem, 1.1rem + 1vw, 1.75rem); font-weight: 700; line-height: 1.4; margin-bottom: .375rem; }
+  .brake-btn { display: inline-flex; align-items: center; gap: .5rem; min-height: 3.25rem; padding: .875rem 1.5rem; border-radius: .25rem; border: 2px solid var(--red); background: rgba(239,68,68,.2); color: var(--on-surface); font: inherit; font-size: 1.25rem; font-weight: 700; flex: none; }
+  .brake-btn .icon { color: var(--red); width: 1.375rem; height: 1.375rem; }
+
+  /* 7. 마무리 */
+  .closing { min-height: 38rem; display: flex; align-items: center; text-align: center; overflow: hidden; border-top-color: rgba(62,72,79,.3); }
+  .closing::before { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(142,213,255,.1), var(--surface-lowest) 60%); pointer-events: none; }
+  .closing .wrap { max-width: 52rem; }
+  .closing-lines { font-size: clamp(1.375rem, 1rem + 2.2vw, 2.75rem); line-height: 1.35; font-weight: 700; letter-spacing: -.02em; }
+  .closing-lines span { display: block; }
+  .closing-lines span + span { color: var(--sky-pale); }
+  .closing .display { margin: 1.75rem 0 2.5rem; font-size: clamp(2rem, 1rem + 4.6vw, 4.25rem); }
+  .closing .grad { background-image: linear-gradient(90deg, var(--on-surface), var(--amber) 50%, var(--sky-pale)); }
+  .cta { display: inline-flex; align-items: center; gap: .5rem; min-height: 3.25rem; padding: .875rem 2rem; border-radius: .25rem; background: var(--amber); color: #472a00; font-weight: 700; font-size: 1.125rem; text-decoration: none; box-shadow: 0 0 24px rgba(245,158,11,.35); transition: background .2s, box-shadow .2s; }
+  .cta:hover { background: #fbbf24; box-shadow: 0 0 32px rgba(245,158,11,.5); }
+  .cta:focus-visible, .wordmark:focus-visible { outline: 2px solid var(--sky-soft); outline-offset: 3px; }
+
+  footer { position: relative; z-index: 1; padding: 2rem 0; border-top: 1px solid rgba(62,72,79,.2); background: var(--surface-lowest); text-align: center; font-size: .8125rem; color: var(--on-surface-variant); }
+  footer a { color: var(--sky-soft); text-underline-offset: 3px; }
+
+  /* 챕터 표시 */
+  .chapters { position: fixed; z-index: 40; right: 1.25rem; top: 50%; transform: translateY(-50%); display: none; flex-direction: column; gap: .875rem; }
+  @media (min-width: 1024px) { .chapters { display: flex; } }
+  .chapters a { display: flex; align-items: center; justify-content: flex-end; gap: .625rem; text-decoration: none; color: rgba(189,200,209,.75); font-size: .8125rem; font-weight: 600; letter-spacing: .02em; transition: color .3s; }
+  .chapters a span { opacity: 0; transform: translateX(6px); transition: opacity .3s, transform .3s; white-space: nowrap; }
+  .chapters a::after { content: ""; width: 1.5rem; height: 2px; border-radius: 1px; background: currentColor; transition: width .3s, background .3s; }
+  .chapters a:hover span, .chapters a.on span { opacity: 1; transform: none; }
+  .chapters a.on { color: var(--amber); }
+  .chapters a.on::after { width: 2.5rem; }
+  .chapter-now { margin-left: auto; font-size: .8125rem; font-weight: 600; color: var(--amber); font-variant-numeric: tabular-nums; opacity: 0; transition: opacity .3s; }
+  .chapter-now.on { opacity: 1; }
+  @media (min-width: 1024px) { .chapter-now { display: none; } }
+
+  /* 연출용 */
+  .driver { position: relative; overflow: hidden; }
+  .pile { position: absolute; inset: 0; pointer-events: none; }
+  .pile span { position: absolute; padding: .375rem .75rem; border-radius: .25rem; background: rgba(36,42,58,.95); border: 1px solid rgba(142,213,255,.25); color: var(--on-surface); font-size: .875rem; font-weight: 500; white-space: nowrap; box-shadow: 0 4px 16px rgba(0,0,0,.4); }
+  .brake.lit { box-shadow: 0 0 0 1px rgba(239,68,68,.5), 0 0 40px rgba(239,68,68,.18); transition: box-shadow .6s; }
+  .brake.lit .brake-btn { background: rgba(239,68,68,.35); }
+  .closing .dawn { position: absolute; inset: 0; background: linear-gradient(to top, rgba(255,185,95,.16), rgba(142,213,255,.08) 45%, transparent 75%); opacity: 0; pointer-events: none; }
+  .legend i.fix { border-top: 2.5px dashed var(--sky-pale); }
+  .bridge { margin-top: 1rem; color: var(--on-surface); }
+  .source-note { margin-top: 1.25rem; font-size: .875rem; color: var(--on-surface-variant); text-align: center; }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-person" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></symbol>
+  <symbol id="i-news" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M7 12h10M7 16h6"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z"/></symbol>
+  <symbol id="i-doc" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></symbol>
+  <symbol id="i-bot" viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="11" rx="2"/><path d="M12 4v4M9 13h.01M15 13h.01"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></symbol>
+  <symbol id="i-gauge" viewBox="0 0 24 24"><path d="M4 17a8 8 0 1 1 16 0"/><path d="M12 17l4-5"/></symbol>
+  <symbol id="i-block" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></symbol>
+  <symbol id="i-scale" viewBox="0 0 24 24"><path d="M3 12h18"/><circle cx="8" cy="12" r="2.5"/><circle cx="16" cy="12" r="2.5"/></symbol>
+  <symbol id="i-stop" viewBox="0 0 24 24"><path d="M8 3h8l5 5v8l-5 5H8l-5-5V8z"/><path d="M12 8v5M12 16h.01"/></symbol>
+</svg>
+
+<div class="lanes" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+
+<header>
+  <div class="progress" aria-hidden="true"><i id="progress"></i></div>
+  <div class="wrap"><a class="wordmark" href="#top">자율주행 포트폴리오</a><span class="chapter-now" id="chapterNow" aria-hidden="true"></span></div>
+</header>
+<nav class="chapters" aria-label="섹션 이동">
+  <a href="#manual" data-ch="manual"><span>수동 운전</span>01</a>
+  <a href="#team" data-ch="team"><span>자율주행 팀</span>02</a>
+  <a href="#vote" data-ch="vote"><span>검사와 투표</span>03</a>
+  <a href="#learn" data-ch="learn"><span>스스로 고치기</span>04</a>
+  <a href="#supervise" data-ch="supervise"><span>감독석</span>05</a>
+</nav>
+
+<main id="top">
+
+  <!-- 1. Hero -->
+  <section class="hero" id="hero" data-scene="hero">
+    <div class="glow" aria-hidden="true"></div>
+    <div class="wrap">
+      <h1 class="display">당신의 연금,<br><span class="grad">이제 누가 운전하나요?</span></h1>
+      <p class="lead"><strong>연기금</strong>(국민연금처럼 여러 사람의 연금을 모아 굴리는 기금)은 수많은 사람의 노후 자금을 굴립니다. 지금까지는 사람이 직접 운전했습니다. 이제 그 운전석을 AI에게 맡기자는 연구가 나왔습니다.</p>
+      <div class="road grid-pattern" aria-hidden="true">
+        <svg viewBox="0 0 600 140" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="beam" x1="50%" x2="50%" y1="100%" y2="0%">
+              <stop offset="0%" stop-color="#f59e0b" stop-opacity=".3"/>
+              <stop offset="70%" stop-color="#38bdf8" stop-opacity=".12"/>
+              <stop offset="100%" stop-color="#38bdf8" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <polygon class="beam" fill="url(#beam)" points="260,140 340,140 315,10 285,10"/>
+          <line class="edge" x1="100" y1="140" x2="290" y2="10" stroke="#38bdf8" stroke-opacity=".45" stroke-width="1.5" vector-effect="non-scaling-stroke"/>
+          <line class="edge" x1="500" y1="140" x2="310" y2="10" stroke="#38bdf8" stroke-opacity=".45" stroke-width="1.5" vector-effect="non-scaling-stroke"/>
+          <line class="dash-flow" x1="300" y1="140" x2="300" y2="10" stroke="#f59e0b" stroke-width="2" vector-effect="non-scaling-stroke"/>
+          <circle cx="300" cy="12" r="3" fill="#f59e0b"/>
+        </svg>
+      </div>
+      <div class="cue">스크롤해서 따라가 보세요<b aria-hidden="true"></b></div>
+    </div>
+  </section>
+
+  <!-- 2. 수동 운전의 한계 -->
+  <section class="sec" id="manual" data-scene="manual">
+    <div class="wrap split">
+      <div>
+        <span class="eyebrow">01 수동 운전</span>
+        <h2 class="h2">수동 운전의 한계</h2>
+        <p class="body">운용역은 매일 뉴스, 경제 지표, 회의 자료를 읽고 결정합니다. 하지만 한 사람이 볼 수 있는 정보와 시간에는 한계가 있습니다. 피곤한 날도, 겁나는 날도 있습니다.</p>
+        <p class="body bridge">그래서 운전을 AI 팀에게 맡기자는 생각이 나왔습니다. 이것이 <strong>자율주행 포트폴리오</strong>입니다.</p>
+      </div>
+      <div class="panel">
+        <div class="driver">
+          <div class="avatar"><svg class="icon"><use href="#i-person"/></svg></div>
+          운전자 (운용역)
+        </div>
+        <div class="info-cards">
+          <div class="info-card"><svg class="icon"><use href="#i-news"/></svg>뉴스</div>
+          <div class="info-card"><svg class="icon"><use href="#i-globe"/></svg>경제 지표</div>
+          <div class="info-card"><svg class="icon"><use href="#i-doc"/></svg>회의 자료</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. 자율주행 팀이 하는 일 -->
+  <section class="sec" id="team" data-scene="team">
+    <div class="wrap">
+      <div class="center">
+        <span class="eyebrow">02 자율주행 팀</span>
+        <h2 class="h2">자율주행 팀이 하는 일</h2>
+        <p class="lead"><strong>에이전트</strong>(Agent)는 맡은 일을 스스로 처리하는 AI 프로그램입니다. 이런 프로그램 수십 개가 팀을 나눠 <strong>포트폴리오</strong>(자산을 어디에 얼마씩 나눠 둘지)를 짭니다.</p>
+      </div>
+      <div class="team">
+        <div class="stat">
+          <div class="num">약 <span data-count="50">50</span>개</div>
+          <h3>전문 에이전트</h3>
+          <p>시장을 전망하는 팀, 포트폴리오를 짜는 팀, 서로의 안을 검사하는 팀으로 나뉘어 일합니다.</p>
+        </div>
+        <div class="radar grid-pattern" aria-hidden="true">
+          <div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div>
+          <div class="car"><i></i><svg class="icon"><use href="#i-bot"/></svg><i></i></div>
+        </div>
+        <div class="stat amber">
+          <div class="num"><span data-count="20">20</span>가지+</div>
+          <h3>포트폴리오 설계 방법</h3>
+          <p>같은 전망을 두고도 서로 다른 방법으로 여러 개의 안을 만듭니다. 길 찾기 앱이 경로를 여러 개 보여 주는 것과 같습니다.</p>
+        </div>
+      </div>
+      <p class="source-note">숫자는 Ang 외(2026) 연구에서 설계한 시스템 기준입니다.</p>
+    </div>
+  </section>
+
+  <!-- 4. 서로 검사하고 투표한다 -->
+  <section class="sec" id="vote" data-scene="vote">
+    <div class="wrap split">
+      <div>
+        <span class="eyebrow">03 검사와 투표</span>
+        <h2 class="h2">서로 검사하고 투표한다</h2>
+        <p class="body">좋은 안이 하나만 나오지 않습니다. 여러 안이 나오면 다른 에이전트가 약점을 따지고, 표결로 고릅니다. 사람의 <strong>투자위원회</strong>(IC, Investment Committee)가 하던 일과 같습니다.</p>
+      </div>
+      <div class="panel">
+        <div class="votes">
+          <div class="vote">안 A</div>
+          <div class="vote pick"><span class="badge"><svg class="icon"><use href="#i-check"/></svg>선택</span>안 B</div>
+          <div class="vote">안 C</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. 스스로 고치는 차 -->
+  <section class="sec" id="learn" data-scene="learn">
+    <div class="wrap split reverse">
+      <div>
+        <span class="eyebrow">04 스스로 고치기</span>
+        <h2 class="h2">스스로 고치는 차</h2>
+        <p class="body">지난번 예측이 실제와 얼마나 달랐는지 확인하고, 자주 틀리는 에이전트의 규칙과 지시문을 스스로 고쳐 씁니다. 운전할수록 길을 더 잘 아는 차입니다.</p>
+      </div>
+      <div class="panel grid-pattern">
+        <div class="paths" aria-hidden="true">
+          <svg viewBox="0 -30 500 220" fill="none" preserveAspectRatio="xMidYMid meet">
+            <path class="path-actual" d="M30,160 Q200,160 280,100 T470,30" stroke="#f59e0b" stroke-width="3" stroke-linecap="round"/>
+            <path class="path-pred" d="M30,160 Q200,160 270,60 T450,15" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="6 6"/>
+            <path class="path-fix" d="M30,160 Q200,160 278,93 T466,27" stroke="#c4e7ff" stroke-width="2" stroke-linecap="round" stroke-dasharray="3 5"/>
+            <circle cx="280" cy="100" r="4" fill="#f59e0b"/>
+            <circle cx="270" cy="60" r="4" fill="#38bdf8"/>
+          </svg>
+        </div>
+        <div class="legend"><span><i class="dash"></i>예측한 길</span><span><i></i>실제 길</span><span><i class="fix"></i>고친 예측</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. 운전석의 사람 -->
+  <section class="sec" id="supervise" data-scene="supervise">
+    <div class="wrap">
+      <div class="center">
+        <span class="eyebrow">05 감독석</span>
+        <h2 class="quote">“운전석이 아니라<br>감독석에.”</h2>
+        <p class="lead">그럼 사람은 무엇을 할까요? 운전 대신 감독합니다. 차가 지켜야 할 교통법규는 <strong>투자정책서</strong>(IPS, Investment Policy Statement)입니다. 사람 운용역을 규율하던 바로 그 문서가 이제 AI를 규율합니다.</p>
+      </div>
+      <div class="rules">
+        <div class="rule"><div class="sign"><svg class="icon"><use href="#i-gauge"/></svg></div><h3>위험 한도</h3><p>얼마나 위험을 감수할지</p></div>
+        <div class="rule"><div class="sign"><svg class="icon"><use href="#i-block"/></svg></div><h3>투자 금지 대상</h3><p>어디에 투자하면 안 되는지</p></div>
+        <div class="rule"><div class="sign"><svg class="icon"><use href="#i-scale"/></svg></div><h3>자산 비중 범위</h3><p>어디에 얼마나 나눠 둘지</p></div>
+      </div>
+      <div class="panel brake">
+        <div>
+          <h3>브레이크(킬스위치) — 멈출 권한은 사람에게</h3>
+          <p class="body">이상하면 사람이 언제든 멈출 수 있습니다.</p>
+        </div>
+        <div class="brake-btn" role="img" aria-label="긴급 정지 버튼 그림"><svg class="icon"><use href="#i-stop"/></svg>긴급 정지</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. 마무리 -->
+  <section class="sec closing" id="closing" data-scene="closing">
+    <div class="dawn" aria-hidden="true"></div>
+    <div class="wrap">
+      <p class="closing-lines"><span>기술은 운전을 대신할 수 있습니다.</span><span>감독은 대신할 수 없습니다.</span></p>
+      <h2 class="display"><span class="grad">당신의 연금,<br>누가 감독하고 있습니까?</span></h2>
+      <a class="cta" href="https://keerhee.github.io/pension-fund-strategy-and-performance/">강의자료 보러 가기 →</a>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">출처: Ang, Azimbayev &amp; Kim (2026), <a href="https://arxiv.org/abs/2604.02279"><cite>The Self Driving Portfolio</cite></a>, arXiv 2604.02279</div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
+<script src="assets/story.js"></script>
+</body>
+</html>
